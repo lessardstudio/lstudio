@@ -119,7 +119,7 @@ const TubeRotation: React.FC = () => {
         scrollTrigger: {
           trigger: '.stage',
           start: "top top", // Когда верхняя часть .stage достигнет верхней части окна
-          end: "bottom bottom",
+          end: "bottom top",
           scrub: 1,
           // markers: true
         },
