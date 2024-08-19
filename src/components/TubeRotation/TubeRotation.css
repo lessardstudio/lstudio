@@ -1,0 +1,101 @@
+@font-face {
+    font-family: 'Bandeins-Strange';
+    src: url('/src/assets/font.ttf') format('truetype'), 'Tahoma';
+    font-stretch: 100% 800%;
+    font-weight: 200 800;
+    font-display: block;
+  }
+
+:root {
+    --fontSize: 4;
+    padding: 0;
+}
+
+html {
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    color: white;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* height: 300vh; Достаточная высота для прокрутки */
+    height: 100%;
+    background: black;
+
+}
+
+::-webkit-scrollbar {
+    width: 0;
+  }
+
+.stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh; /* Высота видимого экрана */
+    overflow: hidden;
+    position: relative;
+    min-height: 200vh; /* Достаточная высота для прокрутки */
+}
+
+
+.wrap {
+    position: relative;
+    height: 150vh;
+}
+
+.additional {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 100%;
+    transform: scale(0);
+    opacity: 0; /* Изначально скрыт */
+    /* transition: opacity 0.5s ease-in-out; */
+    color: white; /* Добавьте нужные стили */
+    font-size: 2rem; /* Размер шрифта */
+    text-align: center;
+}
+
+.tube {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    perspective: 100vw;
+}
+
+.tube__inner {
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    font-family: 'Bandeins-Strange';
+    font-size: calc(var(--fontSize) * 1vw);
+    font-stretch: 800%;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1;
+    transform-style: preserve-3d;
+    white-space: nowrap; /* Исправлено для предотвращения переноса текста */
+    user-select: none;
+}
