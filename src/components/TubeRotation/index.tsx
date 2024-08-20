@@ -19,7 +19,7 @@ const TubeRotation: React.FC = () => {
     if (!stage || !tubeInner || !additional) return;
 
     const clone = tubeInner.getElementsByClassName("line") as HTMLCollectionOf<HTMLDivElement>;
-    const numLines = 7;
+    const numLines = 10;
     const fontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fontSize'));
     const angle = 360 / numLines;
     let radius = 0;
@@ -61,7 +61,7 @@ const TubeRotation: React.FC = () => {
         const fontS = `${100 + 700 * conversion}%`;
 
         paramSet({
-          opacity: conversion + 0.1,
+          opacity: conversion + 0.05,
           fontWeight: fontW,
           fontStretch: fontS
         });
@@ -74,7 +74,7 @@ const TubeRotation: React.FC = () => {
           trigger: '.stage',
           scrub: 1,
           start: "top top",
-          end: "bottom bottom",
+          end: "bottom top",
           // markers: true
         },
         rotateX: "+=130",
@@ -82,7 +82,6 @@ const TubeRotation: React.FC = () => {
           setProps(this.targets());
         },
         onComplete: function() {
-          
           ScrollTrigger.getAll().forEach(trigger => trigger.kill());
           if (stage && stage.parentElement) {
             gsap.set(stage, {
@@ -106,12 +105,29 @@ const TubeRotation: React.FC = () => {
           trigger: '.stage',
           scrub: 1,
           start: "top top",
-          end: "bottom bottom",
+          end: "bottom top",
           // markers: true
         },
         perspective: '1vw',
         ease: 'expo.out',
         opacity: 0,
+        onComplete: function() {
+          ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+          if (stage && stage.parentElement) {
+            gsap.set(stage, {
+              opacity: 0,
+            });
+            stage.parentElement.removeChild(stage);
+          }
+          gsap.set(additional, {
+            opacity: 1,
+            transform: 'scale(1)'
+          });
+          gsap.set(additional.parentElement, {
+            height: 'auto',
+            minHeight: '100vh',
+          });
+        }
       });
 
       gsap.to(additional, {
@@ -119,12 +135,29 @@ const TubeRotation: React.FC = () => {
         scrollTrigger: {
           trigger: '.stage',
           start: "top top", // Когда верхняя часть .stage достигнет верхней части окна
-          end: "bottom top",
+          end: "bottom bottom",
           scrub: 1,
           // markers: true
         },
         transform: "scale(1)",
         ease: 'expo.in',
+        onComplete: function() {
+          ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+          if (stage && stage.parentElement) {
+            gsap.set(stage, {
+              opacity: 0,
+            });
+            stage.parentElement.removeChild(stage);
+          }
+          gsap.set(additional, {
+            opacity: 1,
+            transform: 'scale(1)'
+          });
+          gsap.set(additional.parentElement, {
+            height: 'auto',
+            minHeight: '100vh',
+          });
+        }
       });
     }
 
