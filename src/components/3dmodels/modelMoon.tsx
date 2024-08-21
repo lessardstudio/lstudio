@@ -1,6 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { DirectionalLight, Group, MeshStandardMaterial, Mesh, Color, PointLight } from 'three';
 import { useGLTF } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
+
 import Model from './model';
 
 
@@ -8,9 +12,10 @@ import Model from './model';
 type GLTFModelProps = {
   path?: string;
   position?: [number, number, number];
+  scale?: number | [number, number, number];
 };
 
-const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0] }: GLTFModelProps, ref) => {
+const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0], scale = 1}: GLTFModelProps, ref) => {
   const [model] = useState(new Model(path, position as [number, number, number], [0, 0, 0]));
   const { scene } = useGLTF(model.getPath());
   const localRef = useRef<any>(null);
@@ -61,6 +66,7 @@ const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0] }: 
       object={scene}
       position={model.getPosition()}
       rotation={model.getRotation()}
+      scale={scale}
     />
   );
 });
@@ -68,31 +74,79 @@ const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0] }: 
 const ModelWithAnimation: React.FC = () => {
   const [lightIntensity, setLightIntensity] = useState(0);
   const radius = 25; // Радиус круга
-  const [angle, setAngle] = useState(1/6); // Угол в радианах
-  const [xAnimatePos, setxAnimatePos] = useState(radius * Math.cos(angle));
-  const [zAnimatePos, setzAnimatePos] = useState(radius * Math.sin(angle));
+  const [angle, setAngle] = useState(1/2); // Угол в радианах
+  
+  // Load the GLTF model
+  
+  const scale = 1.8;
+  const model = useLoader(GLTFLoader, '/sun.glb');
+  const modelRef = useRef<Group>(null);
+  const lightRef = useRef<DirectionalLight>(null);
+  const pointLightRef = useRef<PointLight>(null);
+
+  model.scene.traverse((child:any) => {
+    if ((child as Mesh).isMesh) {
+      const mesh = child as Mesh;
+      const material = mesh.material as MeshStandardMaterial;
+
+      // Ensure the material is a standard material
+      if (material.isMeshStandardMaterial) {
+        material.emissive = new Color(0xfffffd); // Yellow emissive color
+        material.emissiveIntensity = 3;
+      }
+    }
+  });
 
 
   // Анимация изменения интенсивности света
   useFrame(() => {
     if (lightIntensity < 1) {
-      setLightIntensity(prev => Math.min(prev + 0.005, 1));
+      setLightIntensity((prev) => Math.min(prev + 0.0005, 50));
     }
 
-    const delta = 0.001; // Скорость изменения угла
-    setAngle(prev => prev + delta); // Увеличиваем угол
+    const delta = 0.01; // Angle change speed
+    const newAngle = angle + delta; // Calculate the new angle
 
-    const x = radius * Math.cos(angle); // Вычисляем x по окружности
-    const z = radius * Math.sin(angle); // Вычисляем z по окружности
-    setxAnimatePos(x);
-    setzAnimatePos(z);
+    // Calculate the new positions based on the updated angle
+    const x = radius * Math.cos(newAngle);
+    const z = radius * Math.sin(newAngle);
+
+    // Update the position and angle state
+    setAngle(newAngle);
+    // Update the positions directly via refs
+    if (modelRef.current) {
+      modelRef.current.position.set(x, -2, z);
+      modelRef.current.scale.set(scale,scale,scale);
+    }
+
+    if (lightRef.current) {
+      lightRef.current.position.set(x, -2, z);
+    }
+
+    if (pointLightRef.current) {
+      pointLightRef.current.position.set(x, -2, z);
+      pointLightRef.current.intensity = lightIntensity;
+    }
+
+
 
   });
 
   return (
     <>
-      <ambientLight intensity={lightIntensity * 0.01} />
-      <directionalLight position={[xAnimatePos, 10, zAnimatePos]} intensity={lightIntensity*1} />
+      <ambientLight intensity={lightIntensity * 0.03} />
+      <directionalLight ref={lightRef} intensity={lightIntensity * 4} color={0xffffcd}/>
+      <pointLight 
+        ref={pointLightRef} 
+        intensity={lightIntensity} // Adjust as needed
+        distance={1000} 
+        decay={0.01} 
+        color={0xffffcd} 
+      />
+      <primitive object={model.scene} ref={modelRef} />
+      <EffectComposer>
+        <Bloom intensity={1.5} radius={0.6} luminanceThreshold={0.2} luminanceSmoothing={0.9} />
+      </EffectComposer>
     </>
   );
 };
@@ -101,8 +155,8 @@ const ModelWithAnimation: React.FC = () => {
 const ModelComponent: React.FC = forwardRef((_props, ref) => {
   return (
     <div>
-      <Canvas style={{ height: '100vh', width: '100vw' }}
-        camera={{rotation: [0,0,0.4], position: [0, 0, 2], fov: 70, near: 0.9, far: 1000 }}>
+      <Canvas style={{ height: '100vh', width: '100vw'}}
+        camera={{rotation: [0,0,0.6], position: [0, 0, 2], fov: 75, near: 0.9, far: 1000 }}>
         <ModelWithAnimation/>
         <GLTFModel ref={ref} position={[0, 0, 0]} />
       </Canvas>

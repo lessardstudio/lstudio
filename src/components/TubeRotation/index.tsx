@@ -23,13 +23,13 @@ const TubeRotation: React.FC = () => {
     const fontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fontSize'));
     const angle = 360 / numLines;
     let radius = 0;
-    let origin = '';
+    let originTxt = '' as string;
 
     function set3D() {
       const width = window.innerWidth;
       const fontSizePx = (width / 100) * fontSize;
       radius = (fontSizePx / 2) / Math.sin((180 / numLines) * (Math.PI / 180));
-      origin = `50% 50% -${radius}px`;
+      originTxt = `50% 50% -${radius}px`;
     }
 
     function cloneNode() {
@@ -47,7 +47,7 @@ const TubeRotation: React.FC = () => {
       gsap.set('.line', {
         rotationX: (index: number) => -angle * index,
         z: radius,
-        transformOrigin: origin,
+        transformOrigin: originTxt,
       });
     }
 
