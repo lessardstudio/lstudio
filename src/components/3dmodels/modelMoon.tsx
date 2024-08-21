@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { DirectionalLight, Group, MeshStandardMaterial, Mesh, Color, PointLight } from 'three';
 import { useGLTF } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 
 import Model from './model';
