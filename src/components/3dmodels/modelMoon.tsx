@@ -74,12 +74,14 @@ const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0], sc
 const ModelWithAnimation: React.FC = () => {
   const [lightIntensity, setLightIntensity] = useState(0);
   const radius = 25; // Радиус круга
+  const radiusE = 3.5; // Радиус круга
   const [angle, setAngle] = useState(1/2); // Угол в радианах
   const [angleEarth, setAngleEarth] = useState(1/2); // Угол в радианах
   
   // Load the GLTF model
   
   const scale = 1.8;
+  const scaleE = 2;
   const scaleskybox = 10;
   const model = useLoader(GLTFLoader, '/sun.glb');
   const earth = useLoader(GLTFLoader, '/earth.glb');
@@ -121,8 +123,8 @@ const ModelWithAnimation: React.FC = () => {
     setAngle(newAngle);
 
     // Update the position and angle state
-    const xE = radius * Math.cos(newAngle);
-    const zE = radius * Math.sin(newAngle);
+    const xE = radiusE * Math.cos(newAngle);
+    const zE = radiusE * Math.sin(newAngle);
     setAngleEarth(newAngleEarth);
     // Update the positions directly via refs
     if (modelRef.current) {
@@ -130,8 +132,16 @@ const ModelWithAnimation: React.FC = () => {
       modelRef.current.scale.set(scale,scale,scale);
     }
     if (earthRef.current) {
-      earthRef.current.position.set(xE, -2, zE);
-      earthRef.current.scale.set(scale,scale,scale);
+      
+      earthRef.current.position.set(xE, zE, 0);
+      earthRef.current.scale.set(scaleE,scaleE,scaleE);
+      let [rotX, rotY, rotZ] = earthRef.current.rotation;
+      rotZ = 0;
+      rotY = (rotY as number) + 0.001;
+      rotX = 1;
+      earthRef.current.rotation.x = rotX;
+      earthRef.current.rotation.z = rotZ;
+      earthRef.current.rotation.y = rotY;
     }
     if (skyboxRef.current) {
       // skyboxRef.current.visible = (lightIntensity < 1) ? false: true;
