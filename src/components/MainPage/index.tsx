@@ -14,7 +14,7 @@ const MainPage: React.FC = () => {
             <div className="container justify-center items-center flex">
                 <div className="header justify-center items-center flex flex-col h-screen w-screen select-none z-10">
                     <div className="logotext">lessardstudio</div>
-                    <div className="flex justify-center discription text-xs">contact us -
+                    <div className="flex justify-center discription text-xs">contact me -
                         <div className="tg" onClick={handleRedirect} >t.me/lessrd</div>
                     </div>
                 </div>

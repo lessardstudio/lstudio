@@ -73,7 +73,7 @@ const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0], sc
 
 const ModelWithAnimation: React.FC = () => {
   const [lightIntensity, setLightIntensity] = useState(0);
-  const radius = 25; // Радиус круга
+  const radius = 100; // Радиус круга
   const radiusE = 3.5; // Радиус круга
   const [angle, setAngle] = useState(1/2); // Угол в радианах
   const [angleEarth, setAngleEarth] = useState(1/2); // Угол в радианах
