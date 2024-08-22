@@ -12,9 +12,22 @@
     
     .header{
 
-      .logotext{
+      
         font-family: 'Bandeins-Strange', 'Tahoma';
         line-height: 100%;
+      
+
+      .discription{
+
+        .tg{
+          color: #fff;
+          opacity: 1;
+          transition: opacity .25s ease;
+  
+          &:hover{
+            opacity: 0.6;
+          }
+        }
       }
     }
 }

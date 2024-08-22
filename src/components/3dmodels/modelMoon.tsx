@@ -75,12 +75,18 @@ const ModelWithAnimation: React.FC = () => {
   const [lightIntensity, setLightIntensity] = useState(0);
   const radius = 25; // Радиус круга
   const [angle, setAngle] = useState(1/2); // Угол в радианах
+  const [angleEarth, setAngleEarth] = useState(1/2); // Угол в радианах
   
   // Load the GLTF model
   
   const scale = 1.8;
+  const scaleskybox = 10;
   const model = useLoader(GLTFLoader, '/sun.glb');
+  const earth = useLoader(GLTFLoader, '/earth.glb');
+  const skybox = useLoader(GLTFLoader, '/skybox.glb');
   const modelRef = useRef<Group>(null);
+  const earthRef = useRef<Group>(null);
+  const skyboxRef = useRef<Group>(null);
   const lightRef = useRef<DirectionalLight>(null);
   const pointLightRef = useRef<PointLight>(null);
 
@@ -101,11 +107,13 @@ const ModelWithAnimation: React.FC = () => {
   // Анимация изменения интенсивности света
   useFrame(() => {
     if (lightIntensity < 1) {
-      setLightIntensity((prev) => Math.min(prev + 0.0005, 50));
+      setLightIntensity((prev) => Math.min(prev + 0.005, 20));
     }
 
-    const delta = 0.01; // Angle change speed
-    const newAngle = angle + delta; // Calculate the new angle
+    const delta = 1; // Angle change speed
+
+    const newAngleEarth = angleEarth + delta; // Calculate the new angle
+    const newAngle = angle + delta/365; // Calculate the new angle
 
     // Calculate the new positions based on the updated angle
     const x = radius * Math.cos(newAngle);
@@ -113,10 +121,23 @@ const ModelWithAnimation: React.FC = () => {
 
     // Update the position and angle state
     setAngle(newAngle);
+    setAngleEarth(newAngleEarth);
     // Update the positions directly via refs
     if (modelRef.current) {
       modelRef.current.position.set(x, -2, z);
       modelRef.current.scale.set(scale,scale,scale);
+    }
+    if (skyboxRef.current) {
+      // skyboxRef.current.visible = (lightIntensity < 1) ? false: true;
+      skyboxRef.current.rotation.set(Math.cos(newAngle),skyboxRef.current.rotation.y, Math.sin(newAngle));
+      skyboxRef.current.scale.set(scaleskybox,scaleskybox,scaleskybox);
+
+      skyboxRef.current.traverse((child: any) => {
+        if (child.isMesh) {
+          child.material.transparent = true; // Включаем поддержку прозрачности
+          child.material.opacity = lightIntensity*0.1; // Устанавливаем нужный уровень прозрачности (0.0 - полностью прозрачный, 1.0 - полностью непрозрачный)
+        }
+      });
     }
 
     if (lightRef.current) {
@@ -134,16 +155,17 @@ const ModelWithAnimation: React.FC = () => {
 
   return (
     <>
-      <ambientLight intensity={lightIntensity * 0.03} />
-      <directionalLight ref={lightRef} intensity={lightIntensity * 4} color={0xffffcd}/>
+      <ambientLight intensity={lightIntensity * 0.06} />
+      <directionalLight ref={lightRef} intensity={lightIntensity * 2} color={0xffffcd}/>
       <pointLight 
         ref={pointLightRef} 
         intensity={lightIntensity} // Adjust as needed
-        distance={1000} 
-        decay={0.01} 
+        distance={10000} 
+        decay={0.1} 
         color={0xffffcd} 
       />
       <primitive object={model.scene} ref={modelRef} />
+      <primitive object={skybox.scene} ref={skyboxRef} />
       <EffectComposer>
         <Bloom intensity={1.5} radius={0.6} luminanceThreshold={0.2} luminanceSmoothing={0.9} />
       </EffectComposer>
