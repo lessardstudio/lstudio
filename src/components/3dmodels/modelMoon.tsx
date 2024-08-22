@@ -118,14 +118,20 @@ const ModelWithAnimation: React.FC = () => {
     // Calculate the new positions based on the updated angle
     const x = radius * Math.cos(newAngle);
     const z = radius * Math.sin(newAngle);
+    setAngle(newAngle);
 
     // Update the position and angle state
-    setAngle(newAngle);
+    const xE = radius * Math.cos(newAngle);
+    const zE = radius * Math.sin(newAngle);
     setAngleEarth(newAngleEarth);
     // Update the positions directly via refs
     if (modelRef.current) {
       modelRef.current.position.set(x, -2, z);
       modelRef.current.scale.set(scale,scale,scale);
+    }
+    if (earthRef.current) {
+      earthRef.current.position.set(xE, -2, zE);
+      earthRef.current.scale.set(scale,scale,scale);
     }
     if (skyboxRef.current) {
       // skyboxRef.current.visible = (lightIntensity < 1) ? false: true;
@@ -166,6 +172,7 @@ const ModelWithAnimation: React.FC = () => {
       />
       <primitive object={model.scene} ref={modelRef} />
       <primitive object={skybox.scene} ref={skyboxRef} />
+      <primitive object={earth.scene} ref={earthRef} />
       <EffectComposer>
         <Bloom intensity={1.5} radius={0.6} luminanceThreshold={0.2} luminanceSmoothing={0.9} />
       </EffectComposer>
