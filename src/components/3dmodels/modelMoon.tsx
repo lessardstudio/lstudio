@@ -1,6 +1,6 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { DirectionalLight, Group, MeshStandardMaterial, Mesh, Color, PointLight } from 'three';
+import { DirectionalLight, Group, MeshStandardMaterial, Mesh, Color, PointLight, AnimationMixer,LoopRepeat } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -73,17 +73,17 @@ const GLTFModel = forwardRef(({ path = '/the_moon.glb', position = [0, 0, 0], sc
 
 const ModelWithAnimation: React.FC = () => {
   const [lightIntensity, setLightIntensity] = useState(0);
-  const radius = 100; // Радиус круга
-  const radiusE = 3.5; // Радиус круга
-  const [angle, setAngle] = useState(1/2); // Угол в радианах
-  const [angleEarth, setAngleEarth] = useState(1/2); // Угол в радианах
+  const radius = 20; // Радиус круга
+  const radiusE = 4; // Радиус круга
+  const [angle, setAngle] = useState((1.25)*Math.PI); // Угол в радианах
+  const [angleEarth, setAngleEarth] = useState(Math.PI/2); // Угол в радианах
   
   // Load the GLTF model
   
-  const scale = 1.8;
+  const scale = 2;
   const scaleE = 2;
   const scaleskybox = 10;
-  const model = useLoader(GLTFLoader, '/sun.glb');
+  const model = useLoader(GLTFLoader, '/stroming_sun.glb');
   const earth = useLoader(GLTFLoader, '/earth.glb');
   const skybox = useLoader(GLTFLoader, '/skybox.glb');
   const modelRef = useRef<Group>(null);
@@ -91,6 +91,7 @@ const ModelWithAnimation: React.FC = () => {
   const skyboxRef = useRef<Group>(null);
   const lightRef = useRef<DirectionalLight>(null);
   const pointLightRef = useRef<PointLight>(null);
+  const { animations } = model;
 
   model.scene.traverse((child:any) => {
     if ((child as Mesh).isMesh) {
@@ -99,32 +100,61 @@ const ModelWithAnimation: React.FC = () => {
 
       // Ensure the material is a standard material
       if (material.isMeshStandardMaterial) {
-        material.emissive = new Color(0xfffffd); // Yellow emissive color
-        material.emissiveIntensity = 3;
+        material.emissive = new Color(0xffffd0); // Yellow emissive color
+        material.emissiveIntensity = 3*lightIntensity;
       }
     }
   });
 
 
+  const mixer = useMemo(() => new AnimationMixer(model.scene), [model.scene]);
+
+  useEffect(() => {
+    if (animations && animations.length > 0) {
+      // Останавливаем предыдущие действия перед запуском новых
+      mixer.stopAllAction();
+
+      animations.forEach((clip) => {
+        const action = mixer.clipAction(clip);
+        action.setLoop(LoopRepeat, Number.MAX_SAFE_INTEGER); // Зацикливание анимации "туда и обратно"
+        action.fadeIn(1); // Плавное появление анимации
+        action.clampWhenFinished = true; // Оставляет анимацию на последнем кадре при остановке
+        action.timeScale = 1; // Устанавливаем скорость анимации
+        action.play(); // Воспроизводим анимацию
+      });
+    }
+
+    // Возвращаем функцию очистки для остановки микшера при размонтировании
+    return () => {
+      mixer.stopAllAction();
+    };
+  }, [animations, mixer]);
+
+
   // Анимация изменения интенсивности света
-  useFrame(() => {
+  useFrame((_, del) => {
+    mixer.update(del);
+
     if (lightIntensity < 1) {
       setLightIntensity((prev) => Math.min(prev + 0.005, 20));
     }
 
-    const delta = 1; // Angle change speed
+    const delta = 20; // Angle change speed
 
-    const newAngleEarth = angleEarth + delta; // Calculate the new angle
-    const newAngle = angle + delta/365; // Calculate the new angle
+    const newAngleEarth = angleEarth + (delta/10000)*Math.PI; // Calculate the new angle
+    const newAngle = angle + (delta/10000/12)*Math.PI; // Calculate the new angle
 
     // Calculate the new positions based on the updated angle
     const x = radius * Math.cos(newAngle);
     const z = radius * Math.sin(newAngle);
+    
     setAngle(newAngle);
 
     // Update the position and angle state
-    const xE = radiusE * Math.cos(newAngle);
-    const zE = radiusE * Math.sin(newAngle);
+    const xE = radiusE * Math.cos(newAngleEarth);
+    const yE = radiusE * Math.sin(newAngleEarth);
+    const zE = radiusE * Math.sin(newAngleEarth);
+    
     setAngleEarth(newAngleEarth);
     // Update the positions directly via refs
     if (modelRef.current) {
@@ -132,20 +162,19 @@ const ModelWithAnimation: React.FC = () => {
       modelRef.current.scale.set(scale,scale,scale);
     }
     if (earthRef.current) {
-      
-      earthRef.current.position.set(xE, zE, 0);
+      earthRef.current.position.set(xE, yE, zE);
       earthRef.current.scale.set(scaleE,scaleE,scaleE);
-      let [rotX, rotY, rotZ] = earthRef.current.rotation;
-      rotZ = 0;
-      rotY = (rotY as number) + 0.001;
-      rotX = 1;
-      earthRef.current.rotation.x = rotX;
-      earthRef.current.rotation.z = rotZ;
-      earthRef.current.rotation.y = rotY;
+      // let [rotX, rotY, rotZ] = earthRef.current.rotation;
+      // rotZ = 0;
+      // rotY = (rotY as number) + 0.001;
+      // rotX = 1;
+      earthRef.current.rotation.x = Math.cos(newAngleEarth);
+      earthRef.current.rotation.z = Math.sin(newAngleEarth) + 0.001;
+      earthRef.current.rotation.y = Math.sin(newAngleEarth);
     }
     if (skyboxRef.current) {
       // skyboxRef.current.visible = (lightIntensity < 1) ? false: true;
-      skyboxRef.current.rotation.set(Math.cos(newAngle),skyboxRef.current.rotation.y, Math.sin(newAngle));
+      skyboxRef.current.rotation.set(Math.cos(newAngleEarth),Math.sin(newAngleEarth), Math.sin(newAngleEarth));
       skyboxRef.current.scale.set(scaleskybox,scaleskybox,scaleskybox);
 
       skyboxRef.current.traverse((child: any) => {
@@ -202,9 +231,5 @@ const ModelComponent: React.FC = forwardRef((_props, ref) => {
     </div>
   );
 });
-
-
-
-
 
 export default ModelComponent;
