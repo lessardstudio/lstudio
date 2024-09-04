@@ -139,10 +139,10 @@ const ModelWithAnimation: React.FC = () => {
       setLightIntensity((prev) => Math.min(prev + 0.005, 20));
     }
 
-    const delta = 20; // Angle change speed
+    const delta = 10; // Angle change speed
 
     const newAngleEarth = angleEarth + (delta/10000)*Math.PI; // Calculate the new angle
-    const newAngle = angle + (delta/10000/12)*Math.PI; // Calculate the new angle
+    const newAngle = angle + (delta/10000/3)*Math.PI; // Calculate the new angle
 
     // Calculate the new positions based on the updated angle
     const x = radius * Math.cos(newAngle);
